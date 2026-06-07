@@ -1,0 +1,43 @@
+#ifndef HANDLE_H
+#define HANDLE_H
+
+#include "../simplesecond.h"
+#include "../ui/ui.h"
+#include "../sqlite/sqlite_rep.h"
+
+/*ПРОВЕРЯТЬ СООТВЕТСВИЕ С menu_str(handle_str.h)*/
+typedef enum {
+	ACTION_ADD_DEV = 1,
+	ACTION_SHOW_DEVICES, /*TODO: Удалить после окончания тестирования*/
+	ACTION_INFO_DEV,
+	ACTION_SET_LINKS,
+	ACTION_FIND,
+	ACTION_ADD_COND
+} Action;
+#define MAX_ACTION 6
+#define MIN_ACTION 1 
+
+/*Запрашиваем действие (Добавить, Показать и т.д), возращаем код операции, перечисление enum Action
+в виде int*/
+int request_action(void);
+
+/*Обрабатываем запрос, по сути кейсы на другие методы*/
+int handler_action(int c, AppState *app);
+
+/*Дальше идет функциональность*/ 
+
+
+/*Добавляем устройство*/
+int add_dev_handle(AppState *app);
+/*Показать список устройсв*/
+void show_devices_handle(AppState *app);
+/**/
+void show_info_dev_handle(AppState *app);
+/**/
+int set_links_handle(AppState *app);
+/**/
+int find_handle(AppState *app);
+/**/
+/*Добавляем условия подтачивания для реле, данные заносятся в память и базу sql*/
+int cond_handle(AppState *app);
+#endif
