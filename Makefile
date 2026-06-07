@@ -1,6 +1,6 @@
 # Имя исполняемого файла
 
-TARGET = simplesecond
+TARGET = replace_v1
 
 # Компилятор
 
@@ -10,19 +10,11 @@ LDFLAGS = -lsqlite3
 # Список всех исходников
 
 SRCS = src/main.c \
-		src/init_app.c \
-		src/aux/auxilary_func.c \
-		src/simplesecond.c \
-		src/rep_find.c \
-		src/rep_link.c \
+		src/rep.c \
 		src/sqlite/create_table.c \
-		src/sqlite/select.c \
 		src/sqlite/insert.c \
-		src/sqlite/update.c \
-		src/ui/ui.c \
-		src/handle/handle.c \
-		src/handle/handle_aux_func.c
-		
+		src/sqlite/select.c \
+		src/sqlite/update.c
 	
 OBJS = $(SRCS:.c=.o)
 

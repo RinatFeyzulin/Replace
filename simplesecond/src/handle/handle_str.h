@@ -12,7 +12,29 @@ const char *menu_str =
 	"6 - Установить условия подтачивания\n"
 	"Для выхода нажмите q\n"
 	">";
+/*Привязано к enum DevType (types_rep.h)*/
+const char *dev_type_str = 
+	"Выберите тип устройства:\n"
+					"1 -> НМШ1-1440\n"
+					"2 -> НМШ1-400\n"
+					"3 -> 1Н-1350\n"
+					"4 -> 1НМ-950\n"
+					"> ";
+					
+/*Строковое представление типов*/
+const char *str_minus = "Минус";
+const char *str_nmsh1_1440 = "НМШ1-1440";
+const char *str_nmsh1_400 = "НМШ1-400";
+const char *str_1n_1350 = "1Н-1350";		
+const char *str_1nm_950 = "1Н-1350";		
+const char *str_plus = "Плюс";
+const char *str_undefined = "Неопределено";
+/*Оглавление  для обработчиков*/
+const char *head_set_links_str = "[INFO] Добавление идет от плюса. Перечисляем все контакты которые есть в цепи.\n"
+	"Идем от Плюса(П) через нагрузку(обмотка реле) и на Минус(М).. \n";
+const char *show_devices_str = "Список устройств:\n";
 
+/*Запросы данных*/
 const char *name_dev_str = "Введите название устройства: > ";
 
 /*Привязано к enum CondEvent(types_rep.h), при возвращении
@@ -28,6 +50,12 @@ const char *cond_event_str =
 const char *cond_ev_track_clear_str = "Введите номер рельсовой цепи: > ";
 const char *cond_ev_click_btn_str = "Введите номер кнопки: > "; /*TODO: исправить номер на название после тестов*/ 
 const char *cond_ev_route_str = "Введите номер маршрута: > ";
+
+/*Запрос ввода формата*/
+const char *form_double_con_wind = "Введите контакты обмотки. Строка формата [1-2] >"; /*TODO: Удалить после пределки
+функции find_connection*/
+
+const char *form_links_contacts = "Введите связь контактов в формате [1П:11-12=2П:11-12] > ";
 
 
 #endif

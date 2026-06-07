@@ -17,6 +17,7 @@ typedef enum {
 #define MAX_ACTION 6
 #define MIN_ACTION 1 
 
+
 /*Запрашиваем действие (Добавить, Показать и т.д), возращаем код операции, перечисление enum Action
 в виде int*/
 int request_action(void);
@@ -24,20 +25,32 @@ int request_action(void);
 /*Обрабатываем запрос, по сути кейсы на другие методы*/
 int handler_action(int c, AppState *app);
 
+
 /*Дальше идет функциональность*/ 
 
 
-/*Добавляем устройство*/
+/*Добавляем устройство в память и базу 
+Запрашиваемая иформация:
+	Имя устройства
+	Тип
+*/
 int add_dev_handle(AppState *app);
+
 /*Показать список устройсв*/
 void show_devices_handle(AppState *app);
 /**/
 void show_info_dev_handle(AppState *app);
 /**/
 int set_links_handle(AppState *app);
+
 /**/
-int find_handle(AppState *app);
-/**/
-/*Добавляем условия подтачивания для реле, данные заносятся в память и базу sql*/
+int find_handle(AppState *app); /*вспомогательные функции для find_handle лежат в handle_aux_func.c*/
+
+
+/*Добавляем условия подтачивания для реле, данные заносятся в память и базу sql
+Собираемая инфрмация : 
+	CondEvent cond, // Условие для подтока реле 
+	int number
+*/
 int cond_handle(AppState *app);
 #endif

@@ -59,8 +59,6 @@ int get_uint_stdin(const char *message, int min, int max){
 }
 
 
-static char *nmsh1_1440 = "НМШ1-1440";
-static char *nmsh1_400 = "НМШ1-400";
 static char *_1n_1350 = "1Н-1350";
 static char *_1nm_950 = "1НМ-950";
 static char *undefined = "UNDEFINED";
@@ -97,59 +95,6 @@ void print_contacts(DevScb *dev){
 	}
 }
 
-
-
-
-int get_event_cond_stdin(CondEvent *event, int *number){
-	int count_event = 3;
-	while(1){
-		printf("Выберите условие для подтачивания реле:\n"
-		"1 -> Рельсовая цепь свободна\n"
-		"2 -> Нажата кнопка\n"
-		"3 -> Задан маршрут\n"
-		"> "
-		);
-
-		int ev  = fgetc(stdin);
-		cleanup_buff_stdin();
-			
-		if(ev == 'q'){
-			return -1;
-		}
-
-		ev = ev - '0';
-
-		if(ev < 1 || ev > count_event){
-			printf("Введено некорректное число, повторите попытку\n\n");
-			continue;
-		} 
-
-		ev *= 10;
-		int num = -1;
-
-		const char *track_clear = "Введите номер рельсовой цепи";
-		const char *click_btn = "Нажата кнопка";
-		const char *route = "Задан маршрут";
-		
-		switch(ev){
-			case TRACK_CLEAR:
-				num = get_int(track_clear);
-				break;
-			case CLICK_BTN:
-				num = get_int(click_btn);
-				break;
-			case ROUTE:
-				num = get_int(route);
-				break;
-		} 
-		
-		if(num == -1) {
-			printf("Ошибка которой не должно быть\n");
-			return -1;
-		}
-		
-	}
-}
 
 int get_info_dev_stdin(char *name, int len, int *type){
 

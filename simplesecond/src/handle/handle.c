@@ -21,7 +21,9 @@ int handler_action(int c, AppState *app){
 			show_info_dev_handle(app);
 			break;				
 		case ACTION_SET_LINKS: // Установить связи в цепи питания
-			set_links_handle(app);
+			if(set_links_handle(app) == -1){
+				print_message("Связи не установлены\n");	
+			}
 			break;
 		case ACTION_FIND: // Показать связи в цепи питания
 			find_handle(app);
@@ -37,201 +39,64 @@ int handler_action(int c, AppState *app){
 	return 0;	
 }
 
-int cond_handle(AppState *app){
 
-	char dev_name[MAX_NAME_DEV];
-	CondEvent cond;
-	int number;
+/*Вспомогательные функции для find_handle лежат в handle_aux_func.c*/
+// парсим строку формата [1-2]
+int parse_double_contacts(char *str, int *ax, int *sec);
+// Печатаем инфу инфу которую насобирали, если она есть
+void print_find_itemstr(ItemStr *head);
+// Обрабатываем результат прострела
+void handle_find_result(FindCtx *find_ctx);
 
-	if(get_string_stdin(dev_name, MAX_NAME_DEV, name_dev_str) == -1) return -1;
-
-	cond = get_uint_stdin(cond_event_str, MIN_CONDEVENT, MAX_CONDEVENT);
-	if(cond <= 0) return -1;
-	cond *= 10;
-
-	/*В зависимости от типа события запрашиваем доп инфу*/
-	switch(cond){
-		case TRACK_CLEAR:
-			number = get_uint_stdin(cond_ev_track_clear_str, 0, INT_MAX);
-			break;
-	}
-	if(number == -1) return -1;
-
-	if(add_condition(dev_name, cond, number, app) == -1) return -1;
-	if(add_condition_db(dev_name, cond, number, app->db) == -1) return -1;
-	
-	return 0;
-}
-
-int parse_double_contacts(char *str, int *ax, int *sec){
-	char *ptr = str;
-	while(*ptr == ' ') ptr++;
-	while(*ptr != '-') ptr++;
-	*ptr++ = '\0';
-	*ax = ConvertToUInt(str);
-	*sec = ConvertToUInt(ptr);
-	if(!*ax || !*sec) return -1;
-	return 0;
-}
-
-static void print_find_itemstr(ItemStr *head){
-	ItemStr *tmp = head;
-	while(tmp){
-		print_message(tmp->name);
-		print_message("\n");
-		tmp = (ItemStr *)tmp->next;
-	}
-}
-//sy 2c
+// Простреливаем цепь питания реле
 int find_handle(AppState *app){
-	char target[MAX_NAME_DEV];
-	if(get_name_dev_stdin(target, MAX_NAME_DEV) == -1)
+
+	const int buff_size = 64;
+	
+	char target[MAX_NAME_DEV]; // какое реле простреливаем
+	if(get_string_stdin(target, MAX_NAME_DEV, name_dev_str) == -1)
 		return -1;
 	// строка формата 11-12
-	char winding[512];
+	char winding[buff_size];
 	int ax;
 	int sec;
 	
 	while(1){
-		const char *message = "Введите строку формата [1-2] >";
-		if(get_link_stdin(winding, sizeof(winding), message) == -1)
+		if(get_string_stdin(winding, buff_size, form_double_con_wind) == -1)
 			return -1;
-		if(parse_double_contacts(winding, &ax, &sec) == -1) 
+		if(parse_double_contacts(winding, &ax, &sec) == -1){
+			print_message("Введена некорректная строка\n"); 
 			continue;
+		}
+			
 		else
 			break;		
 	}
 
 	FindCtx find_ctx;
 	find_connection(target, ax, sec, &find_ctx, app);
-	switch(find_ctx.event){
-		case FIND_OK:
-			print_message("[SYSTEM]Операция прошла успешно, условия подтачивания внесены\n");
-			break;
-		case FIND_INCORRECT_DEV_NAME:
-			print_message("[SYSTEM] Некорректный ввод, данное устройство отсутствует в базе\n");
-			break;
-		case FIND_NAN_PLUS:
-			print_message("[SYSTEM] НЕ НАШЛИ ПЛЮС\n");
-			break;
-		case FIND_NAN_MINUS:
-			print_message("[SYSTEM] НЕ НАШЛИ МИНУС\n");
-			break;
-		case FIND_NAN_CONTACT:
-			print_message("[SYSTEM] Данные контакты отсутствуют\n");
-			break;
-		case FIND_NAN_CONTACT_PLUS:
-			print_message("[SYSTEM] НЕ НАШЛИ Контакты ПЛЮСа\n");
-			break;
-		case FIND_NAN_CONTACT_MINUS:
-			print_message("[SYSTEM] НЕ НАШЛИ Контакты Минуса\n");
-			break;
-		case FIND_NAN_COND_OR_DONT_COND:
-			print_message("[SYSTEM] Недобавлены условия подтачивая реле:\n");
-			print_find_itemstr(find_ctx.head);
-			break;
-		case FIND_NAN_LINKS_P:
-			print_message("[SYSTEM] Не дошли до плюса\n");
-			break;
-		case FIND_NAN_LINKS_M:
-			print_message("[SYSTEM] Не дошли до минуса\n");
-			break;
-		default:
-			print_message("[SYSTEM] Что то пошло не так\n");
-		
-	}
+	handle_find_result(&find_ctx);
 	
 	return 0;
 	
 }
 
-static int terminator_set(char c, char *buffer){
-	char *ptr = buffer;
-	int count = 0;
-	
-	while(*ptr){
-		if(*ptr == c){
-			*ptr = '\0'; 
-			return count + 1;			
-		} 
-		ptr++;
-		count++;
-	}
-	return -1;
-}
-
-static int set_ptr_offset(char **buff, char **ptr, char c){
-	*buff = *ptr;
-	int offset = terminator_set(c, *ptr);
-	if(offset == -1) return -1;
-	*ptr += offset;
-	return 0;	
-}
-
+/*Вспомогательные функции для set_links_handle лежат в handle_aux_func.c*/
+/*Установка терминатора вместо передаваемого символа 'c' в буфере, возвращает смещение
+относительно буфера */
+int terminator_set(char c, char *buffer);
+/*Устанавливаем указатель на строку, и добавляем смещение*/
+int set_ptr_offset(char **buff, char **ptr, char c);
 /*parse string format is 
 "1П:11-12=2П:11-12"*/
-static int parse_link(char *from, int *from_ax, int *from_sec, char *to, int *to_ax, int *to_sec, char *buffer){
-	char *ptr = buffer;
-	
-	char *from_ax_str = NULL;
-	char *from_sec_str = NULL;
-	char *to_ax_str = NULL;
-	char *to_sec_str = NULL;
-	
-	while(*ptr == ' '){ // убираем пробелы в начале
-		ptr++;
-	}
-
-	if(set_ptr_offset(&from, &ptr, ':') == -1) return -1;
-	if(set_ptr_offset(&from_ax_str, &ptr, '-') == -1) return -1;
-	if(set_ptr_offset(&from_sec_str, &ptr, '=') == -1) return -1;
-	if(set_ptr_offset(&to, &ptr, ':') == -1) return -1;
-	if(set_ptr_offset(&to_ax_str, &ptr, '-') == -1) return -1;
-	to_sec_str = ptr;
-
-	*from_ax = ConvertToUInt(from_ax_str);
-	if(*from_ax == -1) return -1;
-
-	*from_sec = ConvertToUInt(from_sec_str);
-	if(*from_sec == -1) return -1;
-
-	*to_ax = ConvertToUInt(to_ax_str);
-	if(*to_ax == -1) return -1;
-
-	*to_sec = ConvertToUInt(to_sec_str);
-	if(*to_sec == -1) return -1;
-
-	return 0;
-
-/*		
-	from = ptr;
-	offset = terminator_set(':', ptr);
-	if(offset == -1) return -1;
-	ptr += offset;
-	
-	from_ax_str = ptr;
-	offset = terminator_set('-', ptr);
-	if(offset == -1) return -1;
-	ptr += offset;
-
-	from_sec_str = ptr;
-	offset = terminator_set('=', ptr);
-	if(offset == -1) return -1;
-	ptr += offset;
-
-	to = ptr;
-	offset = terminator_set(':', ptr);
-	if(offset == -1) return -1;
-	ptr += offset;
-*/
-	
-
-}
+int parse_link(char *from, int *from_ax, int *from_sec, 
+					char *to, int *to_ax, int *to_sec, char *buffer);
 
 int set_links_handle(AppState *app){
-	print_message("[INFO] Добавление идет от плюса. Перечисляем все контакты которые есть в цепи.\n"
-	"Идем от Плюса(П) через нагрузку(обмотка реле) и на Минус(М).. \n");
-	
+
+	print_message(head_set_links_str);
+
+	const int buff_size = 512;
 	
 	int from_ax;
 	int from_sec;
@@ -240,10 +105,11 @@ int set_links_handle(AppState *app){
 
 	char from_name[MAX_NAME_DEV];
 	char to_name[MAX_NAME_DEV];
-	const char *message = "Введите связь контактов в формате [1П:11-12=2П:11-12] > ";
-	char buffer[512];
+	
+	char buffer[buff_size];
 	while(1){
-		if(get_link_stdin(buffer, sizeof(buffer), message) == -1) return -1;
+		if(get_string_stdin(buffer, buff_size, form_links_contacts) == -1) 
+			return -1;
 		if(parse_link(from_name, &from_ax, &from_sec, to_name, &to_ax, &to_sec, buffer) == -1){
 			print_message("Некорректный ввод\n");
 			continue;
@@ -256,42 +122,105 @@ int set_links_handle(AppState *app){
 }
 
 int add_dev_handle(AppState *app){
-	char buff[MAX_NAME_DEV];
+	char name[MAX_NAME_DEV];
 	int type;
-	if(get_info_dev_stdin(buff, MAX_NAME_DEV, &type) == -1){
+	if(get_string_stdin(name, MAX_NAME_DEV, name_dev_str) == -1)
 		return -1;
-	}
-		
-	if(add_dev(buff, type, app) == -1){
+ 	if((type = get_uint_stdin(dev_type_str, MIN_DEVTYPE, PLUS - 1)) == -1) /*TODO: ПЕРЕДЕЛАТЬ
+ 	(PLUS - 1) НА (PLUS) В СЛУЧАЕ ЕСЛИ БУДУТ ПРИВЯЗЫВАТЬСЯ ПЛЮСЫ К КОНТАКТАМ*/ 
+ 		return -1;
+	
+	if(add_dev(name, type, app) == -1){
 		return -1;
 	}
 
-	if(insert_dev(buff, type, app->db) == -1){
+	if(insert_dev(name, type, app->db) == -1){
 		return -1;
 	}
-
 	return 0;
 } 
 
+/*Отдает DevType возвращаем строковое представление из handle_str.h*/
+const char *get_str_type(DevType type);
 
 void show_devices_handle(AppState *app){
+	print_message(show_devices_str);
+	int buff_size = 512;
+	char buffer[buff_size];
+	
 	for(int i = 0; i < app->count_devices; i++){
 		DevScb *dev = &app->devices[i].dev;
-		print_dev(dev, i);
-		print_contacts(dev);
+		snprintf(buffer, buff_size, "[%d] Name: %s; Type: %s\n",
+		 					i, dev->name, get_str_type(dev->type));
+		print_message(buffer);	
 	}		
 }
 
-int show_info_dev_handle(AppState *app){
+void show_info_dev_handle(AppState *app){
+
+	const int buff_size = 512; 
+
 	char name[MAX_NAME_DEV];
-	if(get_name_dev_stdin(name, MAX_NAME_DEV) == -1) return -1;
+	if(get_string_stdin(name, MAX_NAME_DEV, name_dev_str) == -1) 
+		return;
 
 	DevScb *dev = get_dev(name, app);
-	if(dev == NULL) return -1;
-	print_dev(dev, 0);
-	print_contacts(dev);
+	if(dev == NULL) 
+		print_message("Данного устройства нет в базе\n");
 
-	return 0;	
+	char buffer[buff_size];
+	snprintf(buffer, buff_size, "Name: %s; Type: %s\n",
+			 					dev->name, get_str_type(dev->type));
+	// Достаем контакты
+	print_message("| К-т   | Назначение | Проверка");
+	for(int i = 0; i < dev->count_contacts; i++){
+
+		Contact *con = &dev->contacts[i];
+		snprintf(buffer, buff_size, "|%d-%d|", con->axial, con->second);
+		print_message(buffer);
+
+		print_message("В цепи питания: ");
+		CondList *curr_list = con->cond_list;
+		while(curr_list){
+			print_message(((DevScb *)curr_list->target_dev)->name);
+			print_message("; ");
+			curr_list = (CondList *)curr_list->next_list;
+		}
+		print_message("|");
+	}
 }
 
+int cond_handle(AppState *app){
 
+	char dev_name[MAX_NAME_DEV];
+	CondEvent cond;
+	int number = -1; /* сразу зададим значение чтобы если вдруг случайно (что мало вероятно) 
+	в switch case мы не попадем можно было выйти из функции*/
+
+	if(get_string_stdin(dev_name, MAX_NAME_DEV, name_dev_str) == -1) return -1;
+
+	cond = get_uint_stdin(cond_event_str, MIN_CONDEVENT, MAX_CONDEVENT);
+	if(cond <= 0) return -1;
+	cond *= 10;
+
+	/*В зависимости от типа события запрашиваем доп инфу*/
+	switch(cond){
+		case TRACK_CLEAR:
+		case TRACK_OCUPP: // сбор информации осуществляется для условий подтачивания, обестачивания добавил чтобы компилятор не ругался
+			number = get_uint_stdin(cond_ev_track_clear_str, 0, INT_MAX);
+		case CLICK_BTN:
+		case DONT_CLICK_BTN:
+			 number = get_uint_stdin(cond_ev_click_btn_str, 0, INT_MAX);
+		case ROUTE:
+		case DONT_ROUTE:
+			 number = get_uint_stdin(cond_ev_route_str, 0, INT_MAX); 
+			break;
+	}
+	
+	if(number == -1) return -1;
+
+	if(add_condition(dev_name, cond, number, app) == -1) return -1;
+	if(add_condition_db(dev_name, cond, number, app->db) == -1) return -1;
+	
+	return 0;
+}

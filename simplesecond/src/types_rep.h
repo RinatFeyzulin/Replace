@@ -43,20 +43,25 @@ typedef struct {
 }FindCtx;
 
 typedef enum {
-	PLUS,
+	MINUS,
 	NMSH_1_1440,
 	NMSH_1_400,
 	_1N_1350,
-	_1NM_950
+	_1NM_950,
+	PLUS
 } DevType;
 
+#define MAX_DEVTYPE PLUS
+#define MIN_DEVTYPE MINUS
+
 /*Условия подтока и безтока должны идти строго по порядку
-подточено-обесточено какого то действия, так как на этом завязана логика добавления условий подтачивания-обестачивания*/
+подточено-обесточено какого то действия, так как на этом завязана логика добавления 
+условий подтачивания-обестачивания*/
 typedef enum {
 	TRACK_CLEAR = 10, 
 	TRACK_OCUPP = 11,
 	CLICK_BTN = 20,
-	DONT_CLICK = 21,
+	DONT_CLICK_BTN = 21,
 	ROUTE = 30,
 	DONT_ROUTE = 31
 } CondEvent;
@@ -66,6 +71,7 @@ typedef enum {
 typedef struct {
 	CondEvent event;
 	int number;
+	char prefix[4];
 } Condition;
 
 typedef struct {
@@ -81,8 +87,8 @@ typedef struct {
 
 typedef struct {
 	int idx_graph;
-	int idx_source_dev;
-	int idx_dev; // индекс в  dev->contacts
+	int idx_source_dev; // индекс самого устройства в app->devices
+	int idx_dev; // индекс контата в dev->contacts
 	
 	int axial;
 	int second;
