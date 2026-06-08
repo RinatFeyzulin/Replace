@@ -42,6 +42,13 @@ int create_table(sqlite3 *db) {
 		"to_ax INTEGER,"
         "to_sec INTEGER);";             
 	table_count++;
+	
+	char *sql_condition = 
+	    "CREATE TABLE IF NOT EXISTS condition ("
+	    "name TEXT UNIQUE NOT NULL,"       
+	    "cond INTEGER,"          
+	    "number INTEGER);";             
+	table_count++;
 /*
     // 4. Таблица МОНТАЖА (Физические провода и узлы)
     char *sql_mounting = 
@@ -53,7 +60,7 @@ int create_table(sqlite3 *db) {
         "FOREIGN KEY(contact_id) REFERENCES contacts(id) ON DELETE CASCADE);";
 */
     // Выполняем создание таблиц по очереди
-    char *queries[] = {sql_devices, sql_logic_links};
+    char *queries[] = {sql_devices, sql_logic_links, sql_condition};
 
     
     for (int i = 0; i < table_count; i++) {

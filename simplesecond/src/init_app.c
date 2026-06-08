@@ -30,13 +30,15 @@ int init_app(AppState *app)
 
 	create_table(app->db);
 	load_devices(app);
-	add_dev("П", PLUS, app);
-	add_dev("М", PLUS, app);
+	
 	if(app->count_devices == 0){
 		add_dev("П", PLUS, app);
 		add_dev("М", PLUS, app);		
+		add_dev("П", PLUS, app);		
+		add_dev("М", PLUS, app);		
 	} else {
-		load_links(app);		
+		load_links(app);
+		load_condition(app);		
 	}
 
 	app->running = 1;

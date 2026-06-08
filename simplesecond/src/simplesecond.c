@@ -15,9 +15,6 @@ static CondList *create_cond_list(void){
 	return cond_list;	
 }
 
-void cleanup_condition(DevScb *dev){
-	
-}
 /*Сюда передаем только условия подтока, условия безтока автоматически определяются*/
 int add_condition(const char *name, CondEvent event, int number, AppState *app){
 

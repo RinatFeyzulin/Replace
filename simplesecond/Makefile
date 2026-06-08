@@ -21,7 +21,8 @@ SRCS = src/main.c \
 		src/sqlite/update.c \
 		src/ui/ui.c \
 		src/handle/handle.c \
-		src/handle/handle_aux_func.c
+		src/handle/handle_aux_func.c \
+		src/handle/handle_str.c
 		
 	
 OBJS = $(SRCS:.c=.o)

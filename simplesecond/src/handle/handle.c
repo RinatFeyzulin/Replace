@@ -1,5 +1,5 @@
 #include "handle.h"
-#include "handle_str.h" // прописаны константы для сообщений
+//#include "handle_str.h" // прописаны константы для сообщений
 #include <limits.h>
 /*в циклах предусмотрен выход путем вовращения с ui функции результата -1*/
 
@@ -10,9 +10,7 @@ int request_action(void){
 int handler_action(int c, AppState *app){
 	switch(c){
 		case ACTION_ADD_DEV: // Добавляем устройство
-			if(add_dev_handle(app) == -1){
-				print_message("Устройство не добавлено\n");
-			}
+			add_dev_handle(app);
 			break;
 		case ACTION_SHOW_DEVICES: // Показать список устройств
 			show_devices_handle(app);
@@ -21,17 +19,14 @@ int handler_action(int c, AppState *app){
 			show_info_dev_handle(app);
 			break;				
 		case ACTION_SET_LINKS: // Установить связи в цепи питания
-			if(set_links_handle(app) == -1){
-				print_message("Связи не установлены\n");	
-			}
+			set_links_handle(app);
 			break;
 		case ACTION_FIND: // Показать связи в цепи питания
 			find_handle(app);
 			break;
 		/*Будет предоставлен выбор из cond_event*/
 		case ACTION_ADD_COND: // Добавить условия подтачивания
-			if(cond_handle(app) == -1) 
-				print_message("Условия подтачивания не добавлены\n");
+			cond_handle(app);
 			break;
 	}
 
@@ -65,7 +60,7 @@ int find_handle(AppState *app){
 		if(get_string_stdin(winding, buff_size, form_double_con_wind) == -1)
 			return -1;
 		if(parse_double_contacts(winding, &ax, &sec) == -1){
-			print_message("Введена некорректная строка\n"); 
+			print_message(err_parse_format); 
 			continue;
 		}
 			
@@ -111,11 +106,17 @@ int set_links_handle(AppState *app){
 		if(get_string_stdin(buffer, buff_size, form_links_contacts) == -1) 
 			return -1;
 		if(parse_link(from_name, &from_ax, &from_sec, to_name, &to_ax, &to_sec, buffer) == -1){
-			print_message("Некорректный ввод\n");
+			print_message(err_parse_format);
 			continue;
 		}		
-		add_links(from_name, from_ax, from_sec, to_name, to_ax, to_sec, app);
-		add_logic_links(from_name, from_ax, from_sec, to_name, to_ax, to_sec, app->db);
+		if(add_links(from_name, from_ax, from_sec, to_name, to_ax, to_sec, app) == -1){
+			print_message(err_mem_add_links);
+			return -1;
+		}
+		if(add_logic_links_db(from_name, from_ax, from_sec, to_name, to_ax, to_sec, app->db) == -1){
+			print_message(err_db_add_links);
+			return -1;	
+		}
 	}
 	
 	return 0;
@@ -131,10 +132,12 @@ int add_dev_handle(AppState *app){
  		return -1;
 	
 	if(add_dev(name, type, app) == -1){
+		print_message(err_mem_add_dev);
 		return -1;
 	}
 
 	if(insert_dev(name, type, app->db) == -1){
+		print_message(err_db_add_dev);
 		return -1;
 	}
 	return 0;
@@ -166,13 +169,14 @@ void show_info_dev_handle(AppState *app){
 
 	DevScb *dev = get_dev(name, app);
 	if(dev == NULL) 
-		print_message("Данного устройства нет в базе\n");
+		print_message(err_nan_dev);
 
 	char buffer[buff_size];
 	snprintf(buffer, buff_size, "Name: %s; Type: %s\n",
 			 					dev->name, get_str_type(dev->type));
+	print_message(buffer);
 	// Достаем контакты
-	print_message("| К-т   | Назначение | Проверка");
+	print_message("| К-т   | Назначение | Проверка\n");
 	for(int i = 0; i < dev->count_contacts; i++){
 
 		Contact *con = &dev->contacts[i];
@@ -187,6 +191,7 @@ void show_info_dev_handle(AppState *app){
 			curr_list = (CondList *)curr_list->next_list;
 		}
 		print_message("|");
+		print_message("\n");
 	}
 }
 
@@ -200,7 +205,10 @@ int cond_handle(AppState *app){
 	if(get_string_stdin(dev_name, MAX_NAME_DEV, name_dev_str) == -1) return -1;
 
 	cond = get_uint_stdin(cond_event_str, MIN_CONDEVENT, MAX_CONDEVENT);
-	if(cond <= 0) return -1;
+	if(cond <= 0){
+		return -1;		
+	} 
+	
 	cond *= 10;
 
 	/*В зависимости от типа события запрашиваем доп инфу*/
@@ -208,9 +216,11 @@ int cond_handle(AppState *app){
 		case TRACK_CLEAR:
 		case TRACK_OCUPP: // сбор информации осуществляется для условий подтачивания, обестачивания добавил чтобы компилятор не ругался
 			number = get_uint_stdin(cond_ev_track_clear_str, 0, INT_MAX);
+			break;
 		case CLICK_BTN:
 		case DONT_CLICK_BTN:
-			 number = get_uint_stdin(cond_ev_click_btn_str, 0, INT_MAX);
+			number = get_uint_stdin(cond_ev_click_btn_str, 0, INT_MAX);
+			break;
 		case ROUTE:
 		case DONT_ROUTE:
 			 number = get_uint_stdin(cond_ev_route_str, 0, INT_MAX); 
@@ -219,8 +229,14 @@ int cond_handle(AppState *app){
 	
 	if(number == -1) return -1;
 
-	if(add_condition(dev_name, cond, number, app) == -1) return -1;
-	if(add_condition_db(dev_name, cond, number, app->db) == -1) return -1;
+	if(add_condition(dev_name, cond, number, app) == -1){
+		print_message(err_mem_add_condition);
+		return -1;	
+	} 
+	if(add_condition_db(dev_name, cond, number, app->db) == -1){
+		print_message(err_db_add_condition);
+		return -1;	
+	} 
 	
 	return 0;
 }

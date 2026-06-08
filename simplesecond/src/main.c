@@ -2,17 +2,16 @@
 //#include "./ui/ui.h"
 #include "./sqlite/sqlite_rep.h"
 #include "./handle/handle.h"
-void create_relays(AppState *app);
-void create_links(AppState *app);
-void create_condition(AppState *app);
 
-/*TODO:описать каждую функцию в handle.h*/
-/*TODO: описать ошибки в handle_str, и передавать их через каждую функцию отдельно, а не в
-основном обработчике*/
+/*TODO: посмотреть что плохо описано и составить на них задачи*/
 /*TODO: переделать show_info_dev_handle в нормальный вид, сделать доп функцию чтобы
 собарать массив строки и отправлять его уже в ui*/
+/*TODO: переделать финды чтобы обмотки определялись автоматически по типу устройства, возможно
+придется либо хранить контакты обмотки отдельно, либо как то их помечать, либо определять
+какие обмотки по типу*/
 
-/*TODO: написать ui функцию для подтверждения действия, и доп функцию handle_aux_func*/
+/*TODO: написать ui функцию для подтверждения действия, и доп функцию handle_aux_func
+выглядеть это должно как: Вы ввели такую то информацию. Добавить? [Y/n]*/
 
 /*TODO: что если условия подтачивания делать просто из строки, тогда можно будет формировать
 нормальный текст, который будет добавляться уже в другие цепи питания,
@@ -25,9 +24,6 @@ void create_condition(AppState *app);
 	для освобождения CondList сделать функцию универсальной,
 	то есть чтобы можно было и вложенные листы тоже очистить 
 */
-
-/*TODO: переделать финды чтобы обмотки определялись автоматически по типу устройства, возможно
-придется либо хранить контакты обмотки отдельно, либо как то их помечать*/
 
 /*TODO: разработать еще один обработчик для формирования готового текста,
 который потом можно будет уже собирать в файл*/
@@ -56,10 +52,6 @@ int main(void)
 
 	init_app(&app); 
 	
-//	create_relays(&app);
-//	create_links(&app);	
-	create_condition(&app);
-	
 	int c;
 	while(app.running){
 		c = request_action();
@@ -71,83 +63,5 @@ int main(void)
 	}
 	
 	printf("Aufwidersein\n");
-	return 0;
-
-	
-}
-
-void create_links(AppState *app){
-	add_logic_links("sy", 11, 12, "3П", 11, 12, app->db);
-	add_logic_links("3П", 11, 12, "sy", 11, 12, app->db);
-
-	add_logic_links("sy", 11, 12, "1П", 11, 12, app->db);
-	add_logic_links("1П", 11, 12, "sy", 11, 12, app->db);
-
-	add_logic_links("sy", 11, 12, "1П", 11, 13, app->db);
-	add_logic_links("1П", 11, 13, "sy", 11, 12, app->db);
-		
-	add_logic_links("3П", 11, 12, "1c", 1, 2, app->db);
-	add_logic_links("1c", 1, 2, "3П", 11, 12, app->db);
-
-	add_logic_links("1П", 11, 12, "1c", 1, 2, app->db);
-	add_logic_links("1c", 1, 2, "1П", 11, 12, app->db);
- 
-	add_logic_links("1П", 11, 13, "2П", 11, 12, app->db);
-	add_logic_links( "2П", 11, 12,"1П", 11, 13, app->db);
-
-	add_logic_links("2П", 11, 12, "2c", 1, 2, app->db);
-	add_logic_links("2c", 1, 2,"2П", 11, 12, app->db);
-
-	add_logic_links("2kn", 21, 22, "2c", 3,4, app->db);	
-	add_logic_links("2c", 3,4,"2kn", 21, 22, app->db);
-}
-
-void create_relays(AppState *app){
-
-	insert_dev("1П",_1N_1350, app->db);
-	add_dev("1П",_1N_1350, app);
-
-	add_dev("2П", _1N_1350, app);
-	insert_dev("2П", _1N_1350, app->db);
-
-
-	add_dev("3П", _1N_1350, app);
-	insert_dev("3П", _1N_1350, app->db);
-
-	add_dev("91k", _1N_1350, app);
-	insert_dev("91k", _1N_1350, app->db);
-
-	add_dev("92k", _1N_1350, app);
-	insert_dev("92k", _1N_1350, app->db);
-
-	add_dev("1kn", _1N_1350, app);
-	insert_dev("1kn", _1N_1350, app->db);
-
-	add_dev("2kn", _1N_1350, app);
-	insert_dev("2kn", _1N_1350, app->db);
-
-	add_dev("sy", _1N_1350, app);
-	insert_dev("sy", _1N_1350, app->db);
-	
-	add_dev("1c", _1N_1350, app);
-	insert_dev("1c", _1N_1350, app->db);
-
-	add_dev("2c", _1N_1350, app);
-	insert_dev("2c", _1N_1350, app->db);
-
-}
-
-void create_condition(AppState *app){
-	add_condition("1П", TRACK_CLEAR, 1, app);
-	add_condition("1П", TRACK_OCUPP, 1, app);
-
-	add_condition("2П", TRACK_CLEAR, 2, app);
-	add_condition("2П", TRACK_OCUPP, 2, app);
-
-	add_condition("91k", CLICK_BTN, 91, app);
-	add_condition("91k", DONT_CLICK_BTN,91, app);
-
-	add_condition("92k", CLICK_BTN, 92, app);
-	add_condition("92k", DONT_CLICK_BTN, 92, app);
-	
+	return 0;	
 }

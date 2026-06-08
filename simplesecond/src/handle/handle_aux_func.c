@@ -1,5 +1,5 @@
 #include "handle.h"
-#include "handle_str.h"
+//#include "handle_str.h"
 /*Вспомогательные функии для show_devices_handle*/
 
 const char *get_str_type(DevType type){

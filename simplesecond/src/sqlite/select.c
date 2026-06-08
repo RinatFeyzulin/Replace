@@ -54,7 +54,35 @@ int load_links(AppState *app){
 	sqlite3_finalize(stmt);
 	//sqlite3_close(app->db);
 
-	printf("Загружено объектов dev: %d\n", count);
+	printf("Загружено объектов links:%d\n", count);
+
+	return 0;
+}
+
+int load_condition(AppState *app){
+	sqlite3_stmt *stmt;
+
+	const char *sql = "SELECT name,cond,number FROM condition";
+	sqlite3_prepare_v2(app->db, sql, -1, &stmt, NULL);
+
+	int count = 0;
+	
+	while(sqlite3_step(stmt) == SQLITE_ROW){
+	
+		const char *name = (char *)sqlite3_column_text(stmt, 0);
+		int cond = sqlite3_column_int(stmt, 1);
+		int number = sqlite3_column_int(stmt, 2);
+
+
+		add_condition(name, cond, number, app);
+
+		count++;
+	}
+	
+	sqlite3_finalize(stmt);
+	//sqlite3_close(app->db);
+
+	printf("Загружено объектов condition:%d\n", count);
 
 	return 0;
 }

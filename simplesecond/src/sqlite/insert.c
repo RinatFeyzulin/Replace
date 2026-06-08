@@ -1,7 +1,30 @@
 #include "sqlite_rep.h"
 
+int add_condition_db(const char *name, int cond, int number, sqlite3 *db)
+{
+	if(name == NULL) return -1;
 
-int add_logic_links(const char *from_dev, int from_ax, int from_sec, 
+	sqlite3_stmt *stmt;
+	const char *sql = 
+	"INSERT INTO condition (name, cond, number) VALUES(?,?,?);";	
+
+	if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) 
+		return -1;
+ 
+	sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+	sqlite3_bind_int(stmt, 2, cond);
+	sqlite3_bind_int(stmt, 3, number);
+
+
+
+	int rc = sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+	if(rc == SQLITE_DONE)
+		return 0;
+	return -1;
+}
+
+int add_logic_links_db(const char *from_dev, int from_ax, int from_sec, 
 					const char *to_dev, int to_ax, int to_sec, sqlite3 *db)
 {
 	printf("[add_logic_links] %s:%d-%d=%s:%d-%d\n", 

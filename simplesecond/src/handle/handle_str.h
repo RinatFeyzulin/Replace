@@ -2,60 +2,54 @@
 #define HANDLE_STR_H
 
 /*Привязано к enum Action (handle.h)*/
-const char *menu_str =
-	"\nВыберите действие:\n"
-	"1 - Добавить устройство(реле)\n"
-	"2 - Показать список устройств(реле)\n" /*TODO: Удалить после тестов*/
-	"3 - Вывести информацию по конкретному устройству(реле)\n"
-	"4 - Установить связи в цепи питания\n"
-	"5 - Показать связи в цепи питания\n"
-	"6 - Установить условия подтачивания\n"
-	"Для выхода нажмите q\n"
-	">";
+extern const char* const menu_str;
 /*Привязано к enum DevType (types_rep.h)*/
-const char *dev_type_str = 
-	"Выберите тип устройства:\n"
-					"1 -> НМШ1-1440\n"
-					"2 -> НМШ1-400\n"
-					"3 -> 1Н-1350\n"
-					"4 -> 1НМ-950\n"
-					"> ";
+extern const char* const dev_type_str;
 					
 /*Строковое представление типов*/
-const char *str_minus = "Минус";
-const char *str_nmsh1_1440 = "НМШ1-1440";
-const char *str_nmsh1_400 = "НМШ1-400";
-const char *str_1n_1350 = "1Н-1350";		
-const char *str_1nm_950 = "1Н-1350";		
-const char *str_plus = "Плюс";
-const char *str_undefined = "Неопределено";
+extern const char* const str_minus;
+extern const char* const str_nmsh1_1440;
+extern const char* const str_nmsh1_400;
+extern const char* const str_1n_1350;		
+extern const char* const str_1nm_950;		
+extern const char* const str_plus;
+extern const char* const str_undefined;
 /*Оглавление  для обработчиков*/
-const char *head_set_links_str = "[INFO] Добавление идет от плюса. Перечисляем все контакты которые есть в цепи.\n"
-	"Идем от Плюса(П) через нагрузку(обмотка реле) и на Минус(М).. \n";
-const char *show_devices_str = "Список устройств:\n";
+extern const char* const head_set_links_str;
+extern const char* const show_devices_str;
 
 /*Запросы данных*/
-const char *name_dev_str = "Введите название устройства: > ";
+extern const char* const name_dev_str;
 
 /*Привязано к enum CondEvent(types_rep.h), при возвращении
 из функций нужно умножить на 10*/
-const char *cond_event_str =
-		"Выберите условие для подтачивания реле:\n" 
-		"1 -> Рельсовая цепь свободна"
-		"2 -> Нажата кнопка"
-		"3 -> Задан маршрут\n"
-		"> ";
+extern const char* const cond_event_str;
 		
 /*Доп инфа к cond_event*/
-const char *cond_ev_track_clear_str = "Введите номер рельсовой цепи: > ";
-const char *cond_ev_click_btn_str = "Введите номер кнопки: > "; /*TODO: исправить номер на название после тестов*/ 
-const char *cond_ev_route_str = "Введите номер маршрута: > ";
+extern const char* const cond_ev_track_clear_str;
+extern const char* const cond_ev_click_btn_str; /*TODO: исправить (номер) на (название) после тестов*/ 
+extern const char* const cond_ev_route_str;
 
 /*Запрос ввода формата*/
-const char *form_double_con_wind = "Введите контакты обмотки. Строка формата [1-2] >"; /*TODO: Удалить после пределки
+extern const char* const form_double_con_wind; /*TODO: Удалить после пределки
 функции find_connection*/
 
-const char *form_links_contacts = "Введите связь контактов в формате [1П:11-12=2П:11-12] > ";
+extern const char* const form_links_contacts;
+
+
+/*ERROR MESSAGE*/
+extern const char* const err_parse_format;
+
+extern const char* const err_nan_dev;
+extern const char* const err_mem_add_dev;
+extern const char* const err_db_add_dev;
+
+extern const char* const err_mem_add_links;
+extern const char* const err_db_add_links;
+
+extern const char* const err_mem_add_condition;
+extern const char* const err_db_add_condition;
+
 
 
 #endif
