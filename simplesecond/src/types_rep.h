@@ -81,14 +81,14 @@ typedef struct {
 
 typedef struct {
 	CondNode *cond_node;
-	struct DevScb *target_dev;
+	int idx_source_dev; // индекс устройства в app->devices
 	struct CondList *next_list;
 }CondList;
 
 typedef struct {
 	int idx_graph;
 	int idx_source_dev; // индекс самого устройства в app->devices
-	int idx_dev; // индекс контата в dev->contacts
+	int idx_con_dev; // индекс контакта в dev->contacts
 	
 	int axial;
 	int second;

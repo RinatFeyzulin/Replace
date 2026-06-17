@@ -5,16 +5,17 @@
 #include "../ui/ui.h"
 #include "../sqlite/sqlite_rep.h"
 #include "handle_str.h"
+
 /*ПРОВЕРЯТЬ СООТВЕТСВИЕ С menu_str(handle_str.h)*/
 typedef enum {
-	ACTION_ADD_DEV = 1,
+	ACTION_ADD_DEV = 1, /*Добавляем устройство*/
 	ACTION_SHOW_DEVICES, /*TODO: Удалить после окончания тестирования*/
-	ACTION_INFO_DEV,
-	ACTION_SET_LINKS,
-	ACTION_FIND,
-	ACTION_ADD_COND
+	ACTION_INFO_DEV, /*Выводим инфу по конкретному устройству*/
+	ACTION_SET_LINKS, /*Устанавливаем связи в графе между контактами*/
+	ACTION_FIND, /*Делаем прострел цепи питания для сбора инфы*/
+	ACTION_ADD_COND /*Добавляем условия подтачивания*/
 } Action;
-#define MAX_ACTION 6
+#define MAX_ACTION 6 /*Для передачи в ui функцию которая требует диапазона выбора значений*/
 #define MIN_ACTION 1 
 
 
@@ -22,7 +23,9 @@ typedef enum {
 в виде int*/
 int request_action(void);
 
-/*Обрабатываем запрос, по сути кейсы на другие методы*/
+/*Обрабатываем запрос, по сути кейсы на другие методы, принимаем значение 'c' 
+получаемое в результате работы функции request_action, и делаем выбор метода,
+на основе перечислений enum Action*/
 int handler_action(int c, AppState *app);
 
 

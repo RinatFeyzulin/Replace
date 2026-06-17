@@ -1,5 +1,6 @@
 #include "simplesecond.h"
 
+/*Выделяем паиять для CondList(условия подтачивания устройств)*/
 static CondList *create_cond_list(void){
 	CondList *cond_list = malloc(sizeof(CondList));
 	if(cond_list == NULL) return NULL;
@@ -32,15 +33,20 @@ int add_condition(const char *name, CondEvent event, int number, AppState *app){
 
 	cond_list->next_list = (struct CondList *)dev->cond_list;	
 	dont_cond_list->next_list = (struct CondList *)dev->dont_cond_list;
-	
+
+	/*В зависимости от подтока выбирается противопроложное действия для безтока*/
 	cond_list->cond_node->condition->event = event;
-	dont_cond_list->cond_node->condition->event = event + 1;
+	if(event % 2 == 0){
+		dont_cond_list->cond_node->condition->event = event + 1;		
+	} else {
+		dont_cond_list->cond_node->condition->event = event - 1;
+	}
 
 	cond_list->cond_node->condition->number = number;
 	dont_cond_list->cond_node->condition->number = number;
 
-	cond_list->target_dev = (struct DevScb *)dev;
-	dont_cond_list->target_dev = (struct DevScb *)dev;
+	cond_list->idx_source_dev = dev->idx;
+	dont_cond_list->idx_source_dev = dev->idx;
 
 	dev->cond_list = cond_list;
 	dev->dont_cond_list = dont_cond_list;
@@ -48,6 +54,7 @@ int add_condition(const char *name, CondEvent event, int number, AppState *app){
 	
 	return 0;
 }
+
 
 Contact *get_contact(DevScb *dev, int ax, int sec){
 	Contact *contacts = dev->contacts;
@@ -59,10 +66,28 @@ Contact *get_contact(DevScb *dev, int ax, int sec){
 	return NULL;
 }
 
+static int resize_graph(AppState *app){
+	int capacity = app->capacity_contacts * 2;
+	Vertex *tmp_graph = realloc(app->graph, capacity *sizeof(Vertex));
+	int *tmp_visited = realloc(app->visited, capacity *sizeof(int));
+	if(tmp_graph == NULL || tmp_visited == NULL) return -1;
+
+	app->visited = tmp_visited;
+	app->graph = tmp_graph;
+	app->capacity_contacts = capacity;
+
+	
+	
+	return 0;
+}
 
 static int add_contact(DevScb *dev, Contact *con, int axial, int second, int dev_state, AppState *app){
 
 	if(dev == NULL || con == NULL) return -1;
+
+	if(app->count_contacts >= app->capacity_contacts){
+		if(resize_graph(app) == -1) return -1;
+	}
 	
 	con->axial = axial;
 	con->second = second;
@@ -70,7 +95,7 @@ static int add_contact(DevScb *dev, Contact *con, int axial, int second, int dev
 	con->cond_list = NULL;
 
 	con->idx_graph = app->count_contacts;
-	con->idx_dev = dev->count_contacts;
+	con->idx_con_dev = dev->count_contacts;
 	con->idx_source_dev = dev->idx;
 		
 	//con->source_dev = (struct DevScb *)dev;
@@ -122,10 +147,9 @@ static int create_contacts(DevScb *dev, AppState *app){
 		case NMSH_1_400:
 		case _1N_1350:
 		case _1NM_950:
-			create_contacts_nmsh1(dev, app);
-			break;
+			return create_contacts_nmsh1(dev, app);
 		case PLUS:
-			create_contacts_plus(dev, app);
+			return create_contacts_plus(dev, app);
 		default:
 			return -1;
 	}	
@@ -202,8 +226,10 @@ int add_dev(const char *name, DevType type, AppState *app){
 	snprintf(node_dev->dev.name, MAX_NAME_DEV, "%s", name);
 	node_dev->dev.type = type;
 	node_dev->dev.count_contacts = 0;
-	
-	create_contacts(&node_dev->dev, app);		
+	node_dev->dev.idx = app->count_devices;
+		
+	if(create_contacts(&node_dev->dev, app) == -1)
+		return -1;		
 	
 	app->count_devices++;
 
